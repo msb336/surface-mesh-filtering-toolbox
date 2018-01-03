@@ -23,8 +23,6 @@ function [ conTri ] = constrain( varargin )
 
 
 
-
-
 if length(varargin) == 2
     triObj = varargin{1};
     points = triObj.Points;
@@ -41,40 +39,40 @@ minAngle = constraints.Angle;
 newcon = [];
 
 [~,tetrasize] = size(connections);
-    
-    for k = 1:length(connections)
-        switch tetrasize
-            case 4
-                
-                vecs = {points(connections(k, 1), :) - points(connections(k, 2), :), ...
-                    points(connections(k, 2), :) - points(connections(k, 3), :), ...
-                    points(connections(k, 3), :) - points(connections(k, 4), :), ...
-                    points(connections(k, 4), :) - points(connections(k, 1), :)};
 
-                dist = [norm(vecs{1}), norm(vecs{2}), norm(vecs{3}), norm(vecs{4})];
-                iters = 4;
-                set =[2,3,4,1];
-            case 3
-                vecs = {points(connections(k, 1), :) - points(connections(k, 2), :), ...
-                    points(connections(k, 3), :) - points(connections(k, 2), :)};
-
-                dist = [norm(vecs{1}), norm(vecs{2})];
-                iters = 1;
-                set = 2;
-        end
-        
-        for i = 1:iters
+for k = 1:length(connections)
+    switch tetrasize
+        case 4
             
-            angle(i) = acosd(dot(vecs{i}, vecs{set(i)}) / (dist(i)*dist(set(i))));
-        end
-        angle(angle > 90) = 180 - angle(angle>90);
-
-        if all(dist <= maxLength) && all(angle >= minAngle)
-            newcon(end+1, :) = connections(k,:);
-        end
+            vecs = {points(connections(k, 1), :) - points(connections(k, 2), :), ...
+                points(connections(k, 2), :) - points(connections(k, 3), :), ...
+                points(connections(k, 3), :) - points(connections(k, 4), :), ...
+                points(connections(k, 4), :) - points(connections(k, 1), :)};
+            
+            dist = [norm(vecs{1}), norm(vecs{2}), norm(vecs{3}), norm(vecs{4})];
+            iters = 4;
+            set =[2,3,4,1];
+        case 3
+            vecs = {points(connections(k, 1), :) - points(connections(k, 2), :), ...
+                points(connections(k, 3), :) - points(connections(k, 2), :)};
+            
+            dist = [norm(vecs{1}), norm(vecs{2})];
+            iters = 1;
+            set = 2;
     end
-
     
+    for i = 1:iters
+        
+        angle(i) = acosd(dot(vecs{i}, vecs{set(i)}) / (dist(i)*dist(set(i))));
+    end
+    angle(angle > 90) = 180 - angle(angle>90);
+    
+    if all(dist <= maxLength) && all(angle >= minAngle)
+        newcon(end+1, :) = connections(k,:);
+    end
+end
+
+
 
 
 [ft,fp] = freeBoundary(triangulation(newcon,points));

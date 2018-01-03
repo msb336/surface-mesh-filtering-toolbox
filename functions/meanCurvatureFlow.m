@@ -27,7 +27,7 @@ for iter = 1:numiter
     
        
     % Calculate Area
-
+    
     % Calculate Edge Angles (alpha + beta)
         
     end
@@ -55,6 +55,12 @@ for i = 1:length(r)
 end
 
 neighbors = unique(neighbors);
+
+end
+
+function area = getArea(neigh, points)
+
+
 
 end
 

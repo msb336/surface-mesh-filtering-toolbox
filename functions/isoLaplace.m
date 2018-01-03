@@ -12,7 +12,7 @@ function [ smoothTri ] = isoLaplace( varargin )
 % S(i+1) = S(i) + (lam + mu) u(S(i)) + lam*mu*u(S(i))^2
 % So far best smoothing results have been lam = 0.1, mu = 0. Unfortunately
 % this causes the mesh to expand greatly in size.
-defaults = {0.1, 0, 15, 10};
+defaults = {0.1, -0.2, 15, 30};
 
 if isempty(varargin)
     error('Requires at least one input argument');
@@ -90,7 +90,7 @@ for j = 1:length(neighbors)
 end
 
 sumw = sum(w);
-sumwj = sum(w'.*points(neighbors, :));% - p;
+sumwj = sum(w'.*points(neighbors, :));
 
 u = (1/sumw)*sumwj-p;
 end

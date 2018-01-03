@@ -1,10 +1,10 @@
-clearvars;close all;clc;
+clearvars;clc;
 addpath functions
 %%
-shape = 'sphere';
+shape = 'l';
 shape = lower(shape);
 noise_level = 0.1;
-definition = 0.4;
+definition = 0.1;
 %%
 d = [ -1:definition:1 ];
 [x1,y1,z1] = meshgrid(d,d,d);
@@ -19,7 +19,7 @@ switch shape
         p = unique([x,y,z], 'rows');
     case 'sphere'
         %% Sphere
-        [x,y,z] = sphere(20);
+        [x,y,z] = sphere(10/definition);
         p = unique([x(:), y(:), z(:)],'rows');
 end
 
@@ -43,11 +43,11 @@ ccon = constrain(ctri, constraints);
 figure; h1 = trisurf(conTri);view(-108,20);title('No Smoothing');
 axis equal
 %% Isotropic Gaussian Fairing
-smooth = isoLaplace(conTri,0.2, 0, 15, 30);
+smooth = isoLaplace(conTri);
 %%
 figure;
-h = trisurf(smooth);
-% h.FaceColor = 'None';
+h2 = trisurf(smooth);
+h2.FaceColor = 'None';
 view(-108,20);
 title('Smoothed');
 axis equal
@@ -56,6 +56,6 @@ axis equal
 
 %% Shape Error
 %%% Need a function to find points as they relate to originals
-unsmoothed = mean((pnoise(:) - p(:))./p(:));
-isosmoothed = mean((smooth.Points(:) - p(:))./p(:));
+% unsmoothed = mean((pnoise(:) - p(:))./p(:));
+% isosmoothed = mean((smooth.Points(:) - p(:))./p(:));
 
