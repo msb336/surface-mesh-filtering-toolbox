@@ -3,8 +3,8 @@ addpath functions
 %%
 shape = 'l';
 shape = lower(shape);
-noise_level = 0.1;
-definition = 0.1;
+noise_level = 0;
+definition = 0.2;
 %%
 d = [ -1:definition:1 ];
 [x1,y1,z1] = meshgrid(d,d,d);
@@ -19,20 +19,21 @@ switch shape
         p = unique([x,y,z], 'rows');
     case 'sphere'
         %% Sphere
-        [x,y,z] = sphere(10/definition);
+        [x,y,z] = sphere(ceil(100/definition));
         p = unique([x(:), y(:), z(:)],'rows');
 end
 
 
-
 %% Noise
+p = makeHollow(p);
 pnoise = p + noise_level*(randn(size(p))-0.5);
+
 
 %% Triangulation
 tri = delaunayTriangulation(pnoise);
 
 %% Apply Constraints
-constraints.Length = 0.5;
+constraints.Length = findNearest(pnoise,5);
 constraints.Angle = 0;
 conTri = constrain(tri, constraints);
 
