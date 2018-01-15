@@ -30,7 +30,7 @@ if length(varargin) == 2
     constraints = varargin{2};
 elseif length(varargin) == 3
     connections = varargin{1};
-    points = varargin{2};
+    points = varargin{2}; 
     constraints = varargin{3};
 end
 
@@ -39,8 +39,17 @@ minAngle = constraints.Angle;
 newcon = [];
 
 [~,tetrasize] = size(connections);
-
+ll = length(connections);
+last = 1;
+tic;
 for k = 1:length(connections)
+    if k > last+15
+        last = k;
+        time = toc*ll/(k*60);
+        clc
+        fprintf('%d out of %d complete. Estimated time: %d min', k, ll,time)
+    end
+    
     switch tetrasize
         case 4
             

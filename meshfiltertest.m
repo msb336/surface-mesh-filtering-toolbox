@@ -1,12 +1,11 @@
-clearvars;clc;
+clearvars -except points;clc;close all
 addpath functions data
-
+ 
 %%
 shape = 'read';
 shape = lower(shape);
 noise_level = 0;
 definition = 0.2;
-%%
 d = [ -1:definition:1 ];
 
 switch shape
@@ -22,51 +21,69 @@ switch shape
         p = unique([x,y,z], 'rows');
     case 'sphere'
         %% Sphere
-        [x,y,z] = sphere(ceil(100/definition));
+        [x,y,z] = sphere(ceil(10/definition));
         p = unique([x(:), y(:), z(:)],'rows');
     case 'read'
-        points = csvread('bridge.csv');
-
+        if ~exist('points', 'var')
+            points = csvread('bridge.csv');
+            
+        end
 end
 
-%% k-means cluster
-K = 5;
-chunk = points(1:50000,:);
-[G, C] = kmeans(chunk, K);
-
-for i = 1:K
-%% 
-p = points(G==i,:);
-%% Noise
-pnoise = p + noise_level*(randn(size(p))-0.5);
-% figure;scatter3(p(:,1), p(:,2), p(:,3), '.')
 
 
-%% Triangulation
-tri = delaunayTriangulation(pnoise);
 
-%% Apply Constraints
-constraints.Length = findNearest(pnoise,15);
-constraints.Angle = 0;
-conTri = constrain(tri, constraints);
+% %% k-means cluster
+% K = 200;
+% chunk = points(1:5000000,:);
+% outliers = isoutlier(chunk);
+% cleaned = chunk(outliers(:,1)==0, :);
+% %%
+% [G, C] = kmeans(cleaned, K);
+% %%
+% figure
+% for i = 1:100
+%     C = i/K;
+%     data = cleaned(G==i,:);
+%     scatter3(data(:,1),data(:,2),data(:,3), 0.5, 'filled', 'MarkerFaceColor', [C 0 1-C])
+%     hold on
+% end
 
-%% Ground Truth
-% ctri = delaunayTriangulation(p);
-% ccon = constrain(ctri, constraints);
-% %% Plot Triangulation
-% figure; h1 = trisurf(conTri);view(-108,20);title('No Smoothing');
-% axis equal
-%% Isotropic Gaussian Fairing
-smooth = isoLaplace(conTri);
-%%
-trisurf(smooth);
-hold on
+%% Create Surface mesh
+% if ~exist('smooth', 'var')
+%     smooth = cell(K,1);
+%     for i = 1:K
+        %%
+%         clc
+%         i
+%         p = cleaned(G==i,:);
+        %% Triangulation
+        tri = delaunayTriangulation(p);
+        
+        %% Apply Constraints
+        constraints.Length = findNearest(p,10);
+        constraints.Angle = 0;
+        conTri = constrain(tri, constraints);
+        %% Isotropic Laplacian Smoothing
+%         smooth{i} = isoLaplace(conTri);
+        smooth = isoLaplace(conTri);
+%     end
+% end
 
-end
-
+%% Plot Surface Mesh
+% figure
+% for i = 1:K
+    h = trisurf(smooth);
+%     h.FaceColor = [i/K 0 1-i/K];
+%     hold on
+% end
 view(-108,20);
-title('Smoothed');
+t = sprintf('Smoothed');
+title(t);
 axis equal
+
+
+
 %% Mean Curvature Flow
 
 %% Shape Error

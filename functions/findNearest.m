@@ -11,6 +11,7 @@ closest = [];
 for i = 1:length(pointSet)
     %compute Euclidean distances:
     distances = unique(round(sort(sqrt(sum((pointSet-pointSet(i,:)).^2,2))),3));
+    
     %find the smallest distance and use that as an index into B:
     closest(end+1:end+numNeighbors) = distances(1:numNeighbors);
 end

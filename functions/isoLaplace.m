@@ -62,7 +62,6 @@ while iter < maxiter && crit == 0
     iter = iter + 1;
 end
 % Create new triangulation object
-fprintf(num2str(iter));
 
 smoothTri = triangulation(con, pnew);
 end
@@ -83,6 +82,7 @@ for i = 1:length(r)
     neighbors = [neighbors row(row~=idx)];
 end
 neighbors = unique(neighbors);
+
 
 p = points(idx,:);
 for j = 1:length(neighbors)
