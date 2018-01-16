@@ -21,7 +21,7 @@ switch shape
         p = unique([x,y,z], 'rows');
     case 'sphere'
         %% Sphere
-        [x,y,z] = sphere(ceil(10/definition));
+        [x,y,z] = sphere(ceil(15/definition));
         p = unique([x(:), y(:), z(:)],'rows');
     case 'read'
         if ~exist('points', 'var')
@@ -36,14 +36,20 @@ if noise_level ~= 0
 end
 
 %% Alpha Shape
-
-%% k-means cluster
-K = 20;
-chunk = points(1:50000,:);
-outliers = isoutlier(chunk);
-cleaned = chunk(outliers(:,1)==0, :);
-%%
-[G, C] = kmeans(cleaned, K);
+if strcmpi('read', shape)
+    %% k-means cluster
+    K = 2;
+    chunk = points(1:5000,:);
+    outliers = isoutlier(chunk);
+    cleaned = chunk(outliers(:,1)==0, :);
+    %%
+    [G, C] = kmeans(cleaned, K);
+else
+    K = 1;
+    cleaned  = p;
+    G = ones(length(cleaned),1);
+end
+    
 %%
 figure
 for i = 1:K
@@ -51,18 +57,25 @@ for i = 1:K
     fprintf('now on %d of %d', i, K);
     C = i/K;
     p = cleaned(G==i,:);
-    F = scatteredInterpolant(p(:,1), p(:,2), p(:,3));
-    gs = 0.02;
-    X = p(:,1);
-    Y = p(:,2);
-    tx = min(X(:)):gs:max(X(:));
-    ty = min(Y(:)):gs:max(Y(:));
-    %Scattered X,Y to gridded x,y
-    [x,y] = meshgrid(tx,ty);
-    %Interpolation over z-axis
-    z = F(x,y);
-    test = [x(:) y(:) z(:)];
-    shp = alphaShape(test, 0.125 );
+%     F = scatteredInterpolant(p(:,1), p(:,2), p(:,3));
+%     gs = 0.02;
+%     X = p(:,1);
+%     Y = p(:,2);
+%     tx = min(X(:)):gs:max(X(:));
+%     ty = min(Y(:)):gs:max(Y(:));
+%     %Scattered X,Y to gridded x,y
+%     [x,y] = meshgrid(tx,ty);
+%     %Interpolation over z-axis
+%     z = F(x,y);
+    test = p;%[x(:) y(:) z(:)];
+    alpha =  findNearest(test, 5);
+    
+    shp = alphaShape(test, alpha);
+    while shp.numRegions > 1
+        alpha = alpha+5;
+        shp = alphaShape(test,alpha);
+    end
+    plot(shp)
     
     %% Removing non-indexed points
     indeces = unique(shp.boundaryFacets);
