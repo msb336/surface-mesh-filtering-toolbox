@@ -12,6 +12,7 @@ function [ smoothTri ] = isoLaplace( varargin )
 % S(i+1) = S(i) + (lam + mu) u(S(i)) + lam*mu*u(S(i))^2
 % So far best smoothing results have been lam = 0.1, mu = 0. Unfortunately
 % this causes the mesh to expand greatly in size.
+tic
 defaults = {0.1, -0.2, 15, 30};
 
 if isempty(varargin)
@@ -21,6 +22,7 @@ elseif length(varargin) > 1
         defaults{i-1} = varargin{i};
     end
 end
+
 triObj = varargin{1};
 lam = defaults{1};
 mu = defaults{2};
@@ -49,48 +51,43 @@ pnew = zeros(size(pold));
 % Iterative smoothing for numiter iterations
 crit = 0;
 iter = 0;
+
+
+neighbors = arrayfun(@(x)findNeighbors(con, x), 1:max(con(:)), 'UniformOutput', false);
+
 while iter < maxiter && crit == 0
+    
     for idx = 1:length(pold)
         % Calculate umbrella function vector
-        u = umbrella(con,pold, idx);
+        u = umbrella(neighbors{idx}, pold, idx);
         % Laplace Smoothing
         pnew(idx,:) = pold(idx,:) + ( (lam + mu)*u + lam*mu*u.^2);
     end
     % Set old point values to newest values
     pold = pnew;
-    crit = checkCrit(con, pnew, minAngle);
+%     crit = checkCrit(con, pnew, minAngle);
     iter = iter + 1;
 end
 % Create new triangulation object
 
 smoothTri = triangulation(con, pnew);
+fprintf('time taken: %d', toc)
 end
 
 
 %%%%%%%%%%%%%% Functions %%%%%%%%%%%%%%%
-function u = umbrella(con, points, idx)
+function u = umbrella(neighbors, points, idx)
 % u(xi) = (1/(sum(wj)) (sum(wj*xj) - xi
 % wj = ||xi - xj||^-1
 
-% Find all rows containing point index
-[r,~] = find(con == idx);
-neighbors = [];
-
-% Find all neighbors for index point
-for i = 1:length(r)
-    row = con(r(i),:);
-    neighbors = [neighbors row(row~=idx)];
-end
-neighbors = unique(neighbors);
-
-
 p = points(idx,:);
-for j = 1:length(neighbors)
-    w(j) = 1/norm(p - points(neighbors(j),:));
-end
+dif = p - points(neighbors,:);
+twonorm = sqrt(dif(:,1).^2+dif(:,2).^2+dif(:,3).^2);
+w = 1./twonorm;
+
 
 sumw = sum(w);
-sumwj = sum(w'.*points(neighbors, :));
+sumwj = sum(w(:).*points(neighbors, :));
 
 u = (1/sumw)*sumwj-p;
 end
@@ -98,6 +95,7 @@ end
 
 function bool = checkCrit(con, points, criteria)
 bool = 1;
+
 for rows = 1:length(con)
     connectedpoints = points(con(rows, :),:);
     vectors = [connectedpoints(1,:) - connectedpoints(2,:); ...

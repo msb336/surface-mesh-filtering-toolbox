@@ -2,7 +2,7 @@ clearvars -except points;clc;close all
 addpath functions data
 
 %%
-shape = 'read';
+shape = 'l';
 shape = lower(shape);
 noise_level = 0;
 definition = 0.2;
@@ -51,10 +51,12 @@ else
 end
     
 %%
+smoothed = cell(K,1);
+
+
 figure
 for i = 1:K
-    clc
-    fprintf('now on %d of %d', i, K);
+
     C = i/K;
     p = cleaned(G==i,:);
 %     F = scatteredInterpolant(p(:,1), p(:,2), p(:,3));
@@ -68,18 +70,17 @@ for i = 1:K
 %     %Interpolation over z-axis
 %     z = F(x,y);
     test = p;%[x(:) y(:) z(:)];
-    alpha =  findNearest(test, 5);
+    alpha =  0.2;
     
     shp = alphaShape(test, alpha);
-    while shp.numRegions > 1
-        alpha = alpha+5;
+    while shp.numRegions > 1 || shp.volume == 0
+        alpha = alpha+0.1;
         shp = alphaShape(test,alpha);
     end
-    plot(shp)
-    
+
     %% Removing non-indexed points
     indeces = unique(shp.boundaryFacets);
-    ii = [1:length(indeces)]';
+    ii = (1:length(indeces))';
     key = [indeces, ii];
     relpoints = test(indeces,:);
     newbounds = arrayfun(@(x) swapidx(key, x), shp.boundaryFacets);

@@ -41,8 +41,7 @@ smoothTri = triangulation(con, pnew);
 end
 
 function neighbors = findNeighbors(con, idx)
-% u(xi) = (1/(sum(wj)) (sum(wj*xj - xi))
-% wj = ||xi - xj||^-1
+
 
 % Find all rows containing point index
 [r,~] = find(con == idx);
