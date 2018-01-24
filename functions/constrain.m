@@ -8,7 +8,8 @@ function [ conTri ] = constrain( varargin )
 %
 % Inputs:
 % triObj - triangulation object
-% constraints - constraint object with properties "Length" and "Angle"
+% constraints - constraint object with properties "Length" (angle -
+% deprecated)
 %
 % conTri = constrain(connections, points, constraints)
 % Outputs:
@@ -19,10 +20,6 @@ function [ conTri ] = constrain( varargin )
 % points - verteces of tetrahedral mesh
 % constraints  - constraint object with properties "Length" and "Angle"
 
-
-
-
-
 if length(varargin) == 2
     triObj = varargin{1};
     points = triObj.Points;
@@ -30,58 +27,15 @@ if length(varargin) == 2
     constraints = varargin{2};
 elseif length(varargin) == 3
     connections = varargin{1};
-    points = varargin{2}; 
+    points = varargin{2};
     constraints = varargin{3};
 end
 
 maxLength = constraints.Length;
-minAngle = constraints.Angle;
-newcon = [];
-
 [~,tetrasize] = size(connections);
-ll = length(connections);
-last = 1;
-tic;
-for k = 1:length(connections)
-    if k > last+15
-        last = k;
-        time = toc*ll/(k*60);
-        clc
-        fprintf('%d out of %d complete. Estimated time: %d min', k, ll,time)
-    end
-    
-    switch tetrasize
-        case 4
-            
-            vecs = {points(connections(k, 1), :) - points(connections(k, 2), :), ...
-                points(connections(k, 2), :) - points(connections(k, 3), :), ...
-                points(connections(k, 3), :) - points(connections(k, 4), :), ...
-                points(connections(k, 4), :) - points(connections(k, 1), :)};
-            
-            dist = [norm(vecs{1}), norm(vecs{2}), norm(vecs{3}), norm(vecs{4})];
-            iters = 4;
-            set =[2,3,4,1];
-        case 3
-            vecs = {points(connections(k, 1), :) - points(connections(k, 2), :), ...
-                points(connections(k, 3), :) - points(connections(k, 2), :)};
-            
-            dist = [norm(vecs{1}), norm(vecs{2})];
-            iters = 1;
-            set = 2;
-    end
-    
-    for i = 1:iters
-        
-        angle(i) = acosd(dot(vecs{i}, vecs{set(i)}) / (dist(i)*dist(set(i))));
-    end
-    angle(angle > 90) = 180 - angle(angle>90);
-    
-    if all(dist <= maxLength) && all(angle >= minAngle)
-        newcon(end+1, :) = connections(k,:);
-    end
-end
 
-
+logi = arrayfun(@(x)checkDistance(connections, points, x, tetrasize, maxLength), 1:length(connections(:,1)));
+newcon = connections(logi', :);
 
 
 [ft,fp] = freeBoundary(triangulation(newcon,points));
@@ -90,3 +44,29 @@ conTri = triangulation(ft, fp);
 
 end
 
+function L = checkDistance(connectionset, pointset, index, tetrasize, maxLength)
+switch tetrasize
+    case 4
+        
+        vecs = [pointset(connectionset(index, 1), :)' - pointset(connectionset(index, 2), :)', ...
+            pointset(connectionset(index, 2), :)' - pointset(connectionset(index, 3), :)', ...
+            pointset(connectionset(index, 3), :)' - pointset(connectionset(index, 4), :)', ...
+            pointset(connectionset(index, 4), :)' - pointset(connectionset(index, 1), :)'];
+        
+        dist = [norm(vecs(:,1)), norm(vecs(:,2)), norm(vecs(:,3)), norm(vecs(:,4))];
+        
+    case 3
+        vecs = [pointset(connectionset(index, 1), :)' - pointset(connectionset(index, 2), :)', ...
+            pointset(connectionset(index, 3), :)' - pointset(connectionset(index, 2), :)'];
+        
+        dist = [vecs(:,1), norm(vecs(:,2))];
+        
+end
+
+if all(dist < maxLength)
+    L = true;
+else
+    L = false;
+end
+
+end
