@@ -12,7 +12,7 @@ function [ smoothTri ] = isoLaplace( varargin )
 % S(i+1) = S(i) + (lam + mu) u(S(i)) + lam*mu*u(S(i))^2
 % So far best smoothing results have been lam = 0.1, mu = 0. Unfortunately
 % this causes the mesh to expand greatly in size.
-tic
+
 defaults = {0.1, -0.2, 15, 30};
 
 if isempty(varargin)
@@ -52,17 +52,20 @@ pnew = zeros(size(pold));
 crit = 0;
 iter = 0;
 
+connectVect = 1:max(con(:));
 
-neighbors = arrayfun(@(x)findNeighbors(con, x), 1:max(con(:)), 'UniformOutput', false);
+neighbors = arrayfun(@(x)findNeighbors(con, x), connectVect, 'UniformOutput', false);
 
 while iter < maxiter && crit == 0
     
     for idx = 1:length(pold)
         % Calculate umbrella function vector
+        
         u = umbrella(neighbors{idx}, pold, idx);
         % Laplace Smoothing
         pnew(idx,:) = pold(idx,:) + ( (lam + mu)*u + lam*mu*u.^2);
     end
+
     % Set old point values to newest values
     pold = pnew;
 %     crit = checkCrit(con, pnew, minAngle);
@@ -71,12 +74,12 @@ end
 % Create new triangulation object
 
 smoothTri = triangulation(con, pnew);
-fprintf('time taken: %d', toc)
+
 end
 
 
 %%%%%%%%%%%%%% Functions %%%%%%%%%%%%%%%
-function u = umbrella(neighbors, points, idx)
+function [u] = umbrella(neighbors, points, idx)
 % u(xi) = (1/(sum(wj)) (sum(wj*xj) - xi
 % wj = ||xi - xj||^-1
 

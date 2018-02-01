@@ -7,17 +7,15 @@ function [ max_distance ] = findNearest( pointSet, numNeighbors )
 if nargin == 1
     numNeighbors = 3;
 end
-closest = [];
-for i = 1:length(pointSet)
-    %compute Euclidean distances:
-    distances = unique(round(sort(sqrt(sum((pointSet-pointSet(i,:)).^2,2))),3));
-    
-    %find the smallest distance and use that as an index into B:
-    closest(end+1:end+numNeighbors) = distances(1:numNeighbors);
-end
 
+distancevectors = arrayfun(@(x)getD(pointSet, x, numNeighbors), 1:length(pointSet), 'UniformOutput', false);
+closest = cell2mat(distancevectors);
 max_distance = max(closest(:));
 
+end
 
+function closest = getD(pointset, idx, numNeighbors)
+    distance = unique(round(sort(sqrt(sum((pointset-pointset(idx,:)).^2,2))),3));
+    closest = distance(1:numNeighbors);
 end
 

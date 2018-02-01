@@ -2,7 +2,7 @@ clearvars -except points;clc;close all
 addpath functions data
 
 %%
-shape = 'l';
+shape = 'read';
 shape = lower(shape);
 noise_level = 0;
 definition = 0.2;
@@ -16,7 +16,7 @@ switch shape
         [x3,y3,z3] = meshgrid(d,d+2,d);
         
         x = [x1(:); x2(:); x3(:)];
-        y = [y1(:); y2(:); y3(:)];
+        y = [y1(:); y2(:); y3(:)]; 
         z = [z1(:); z2(:); z3(:)];
         p = unique([x,y,z], 'rows');
     case 'sphere'
@@ -38,7 +38,7 @@ end
 %% Alpha Shape
 if strcmpi('read', shape)
     %% k-means cluster
-    K = 2;
+    K = 1;
     chunk = points(1:5000,:);
     outliers = isoutlier(chunk);
     cleaned = chunk(outliers(:,1)==0, :);
@@ -59,18 +59,18 @@ for i = 1:K
 
     C = i/K;
     p = cleaned(G==i,:);
-%     F = scatteredInterpolant(p(:,1), p(:,2), p(:,3));
-%     gs = 0.02;
-%     X = p(:,1);
-%     Y = p(:,2);
-%     tx = min(X(:)):gs:max(X(:));
-%     ty = min(Y(:)):gs:max(Y(:));
-%     %Scattered X,Y to gridded x,y
-%     [x,y] = meshgrid(tx,ty);
-%     %Interpolation over z-axis
-%     z = F(x,y);
-    test = p;%[x(:) y(:) z(:)];
-    alpha =  0.2;
+    F = scatteredInterpolant(p(:,1), p(:,2), p(:,3));
+    gs = 0.02;
+    X = p(:,1);
+    Y = p(:,2);
+    tx = min(X(:)):gs:max(X(:));
+    ty = min(Y(:)):gs:max(Y(:));
+    %Scattered X,Y to gridded x,y
+    [x,y] = meshgrid(tx,ty);
+    %Interpolation over z-axis
+    z = F(x,y);
+    test = [x(:) y(:) z(:)];
+    alpha =  0.1;
     
     shp = alphaShape(test, alpha);
     while shp.numRegions > 1 || shp.volume == 0
@@ -92,9 +92,11 @@ for i = 1:K
     %%
     h = trisurf(smoothed{i});
     h.FaceColor = [(i-1)/K i/(2*K) 1- (i-1)/K];
+%     h.EdgeColor = 'None';
     hold on
     
 end
-
+figure;scatter3(cleaned(:,1), cleaned(:,2), cleaned(:,3), 0.5, 'b.')
+hold on;scatter3(test(:,1), test(:,2), test(:,3), 0.5, 'r*')
 
 
