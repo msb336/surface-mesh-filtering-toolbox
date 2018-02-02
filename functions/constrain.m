@@ -40,11 +40,14 @@ newcon = connections(logi', :);
 
 [ft,fp] = freeBoundary(triangulation(newcon,points));
 conTri = triangulation(ft, fp);
+% conTri = triangulation(newcon, points);
 
 
 end
 
 function L = checkDistance(connectionset, pointset, index, tetrasize, maxLength)
+
+
 switch tetrasize
     case 4
         
