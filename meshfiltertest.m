@@ -2,9 +2,9 @@ clearvars -except points;clc;close all
 addpath functions data
 
 %%
-shape = 'read';
+shape = 'l';
 shape = lower(shape);
-noise_level = 0;
+noise_level = 0.1;
 definition = 0.2;
 d = [ -1:definition:1 ];
 
@@ -19,6 +19,8 @@ switch shape
         y = [y1(:); y2(:); y3(:)];
         z = [z1(:); z2(:); z3(:)];
         p = unique([x,y,z], 'rows');
+        p = p + noise_level*randn(size(p));
+        
     case 'sphere'
         %% Sphere
         [x,y,z] = sphere(ceil(10/definition));
@@ -33,9 +35,12 @@ end
 
 
 if strcmp('read', shape)
+%% Plot Raw Point Cloud
+scatter3(points(:,1), points(:,2), points(:,3), 0.1, '.b')
+
     %% k-means cluster
     K = 15;
-    chunk = points(1:50000+10000,:);
+    chunk = points(1:50000,:);
     outliers = isoutlier(chunk);
     cleaned = chunk(outliers(:,1)==0, :);
     
@@ -46,25 +51,21 @@ if strcmp('read', shape)
     if ~exist('smooth', 'var')
         smooth = cell(K,1);
         %%
-        constraints.Length = 0.2;
+        constraints.Length = 0.07;
         for i = 2%:K
-            test = cleaned(G==i,:);
-            p = estimateFace(cleaned(G==i,:), 0.01, 0.2);
-            scatter3(p(:,1), p(:,2), p(:,3), 0.5, 'filled', 'MarkerFaceColor', [i/K 0 1 - i/K]);hold on;
-            scatter3(test(:,1), test(:,2), test(:,3), 1, 'filled', 'MarkerFaceColor', [1 0 0]);hold on;
+            p = estimateFace(cleaned(G==i,:), 0.01, 0.08);
+
             %% Triangulation
             tri = delaunayTriangulation(p);
-            
             %% Apply Constraints
-
             [conTri] = constrain(tri, constraints);
-            
-
+%             %% Alpha Method
+%             conTri = buildAlphaTriangulation(p, constraints.Length);
             %% Isotropic Laplacian Smoothing
             smooth{i} = isoLaplace(conTri);
-            
+         
         end
-        axis equal
+%         axis equal
     end
     
     %% Plot Surface Mesh
@@ -78,16 +79,8 @@ if strcmp('read', shape)
     
 else
     %% Create Surface mesh
-    %% Triangulation
-    tri = delaunayTriangulation(p);
-    
-    %% Apply Constraints
-    constraints.Length = findNearest(p,10);
-    constraints.Angle = 0;
-    conTri = constrain(tri, constraints);
-    %% Isotropic Laplacian Smoothing
-    
-    smooth = isoLaplace(conTri);
+    est = estimateFace(p,0.02, 0.08);
+    smooth = constrainedTriangulation(est);
     
     %% Plot Surface Mesh
     h = trisurf(smooth);
@@ -98,4 +91,8 @@ t = sprintf('Smoothed');
 title(t);
 axis equal
 
+%% Save as STL
+% stlvar.vertices = smooth.Points; stlvar.faces = smooth.ConnectivityList;
+% 
+% stlwrite('data\segment.stl', stlvar);
 
