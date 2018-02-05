@@ -37,10 +37,12 @@ maxLength = constraints.Length;
 logi = arrayfun(@(x)checkDistance(connections, points, x, tetrasize, maxLength), 1:length(connections(:,1)));
 newcon = connections(logi', :);
 
-
-[ft,fp] = freeBoundary(triangulation(newcon,points));
-conTri = triangulation(ft, fp);
-% conTri = triangulation(newcon, points);
+if tetrasize == 4
+    [ft,fp] = freeBoundary(triangulation(newcon,points));
+    conTri = triangulation(ft, fp);
+else
+    conTri = triangulation(newcon, points);
+end
 
 
 end
@@ -62,7 +64,7 @@ switch tetrasize
         vecs = [pointset(connectionset(index, 1), :)' - pointset(connectionset(index, 2), :)', ...
             pointset(connectionset(index, 3), :)' - pointset(connectionset(index, 2), :)'];
         
-        dist = [vecs(:,1), norm(vecs(:,2))];
+        dist = [norm(vecs(:,1)), norm(vecs(:,2))];
         
 end
 
