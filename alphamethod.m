@@ -6,6 +6,7 @@ shape = 'read';
 shape = lower(shape);
 noise_level = 0;
 definition = 0.2;
+alpha = 0.1;
 d = [ -1:definition:1 ];
 
 switch shape
@@ -38,14 +39,14 @@ end
 %% Alpha Shape
 if strcmpi('read', shape)
     %% k-means cluster
-    K = 1;
-    chunk = points(1:5000,:);
+    K = 15;
+    chunk = points(1:50000,:);
     outliers = isoutlier(chunk);
     cleaned = chunk(outliers(:,1)==0, :);
     %%
     [G, C] = kmeans(cleaned, K);
 else
-    K = 1;
+    K = 15;
     cleaned  = p;
     G = ones(length(cleaned),1);
 end
@@ -55,34 +56,22 @@ smoothed = cell(K,1);
 
 
 figure
-for i = 1:K
+for i = 2% 1:K
 
     C = i/K;
-    p = cleaned(G==i,:);
-    F = scatteredInterpolant(p(:,1), p(:,2), p(:,3));
-    gs = 0.02;
-    X = p(:,1);
-    Y = p(:,2);
-    tx = min(X(:)):gs:max(X(:));
-    ty = min(Y(:)):gs:max(Y(:));
-    %Scattered X,Y to gridded x,y
-    [x,y] = meshgrid(tx,ty);
-    %Interpolation over z-axis
-    z = F(x,y);
-    test = [x(:) y(:) z(:)];
-    alpha =  0.1;
+    p = estimateFace(cleaned(G==i,:), 0.01, 0.1);
     
-    shp = alphaShape(test, alpha);
-    while shp.numRegions > 1 || shp.volume == 0
-        alpha = alpha+0.1;
-        shp = alphaShape(test,alpha);
-    end
+    shp = alphaShape(p, alpha);
+%     while shp.numRegions > 1 || shp.volume == 0
+%         alpha = alpha+0.01;
+%         shp = alphaShape(p,alpha);
+%     end
 
     %% Removing non-indexed points
     indeces = unique(shp.boundaryFacets);
     ii = (1:length(indeces))';
     key = [indeces, ii];
-    relpoints = test(indeces,:);
+    relpoints = p(indeces,:);
     newbounds = arrayfun(@(x) swapidx(key, x), shp.boundaryFacets);
     
     %%
@@ -92,11 +81,10 @@ for i = 1:K
     %%
     h = trisurf(smoothed{i});
     h.FaceColor = [(i-1)/K i/(2*K) 1- (i-1)/K];
-%     h.EdgeColor = 'None';
     hold on
     
 end
-figure;scatter3(cleaned(:,1), cleaned(:,2), cleaned(:,3), 0.5, 'b.')
-hold on;scatter3(test(:,1), test(:,2), test(:,3), 0.5, 'r*')
+% figure;scatter3(cleaned(:,1), cleaned(:,2), cleaned(:,3), 0.5, 'b.')
+% hold on;scatter3(p(:,1), p(:,2), p(:,3), 0.5, 'r*')
 
 
