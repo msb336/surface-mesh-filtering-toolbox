@@ -19,25 +19,42 @@ constraints.Length = 0.5;
 smooth = constrain(shp.boundaryFacets, allpoints, constraints);
 
 %% Determine Free edges and points
+iter = 0;
 free_edges = boundedcheck(smooth);
-while ~isempty(free_edges) && constraints.Length < 1
-constraints.Length = constraints.Length + 0.1;
-%%
-un_idx = smooth.ConnectivityList;
-un_idx = un_idx(:);
 z = (1:length(smooth.Points))';
+allcon = sort(smooth.ConnectivityList,2);
+un_idx = allcon(:);
+freepts = z(~ismember(z,un_idx));
+freeidx = sort([free_edges; freepts]);
+nec_connections = allcon(any(ismember(allcon,freeidx),2),:);
 
-%%
-freeidx = unique(sort([free_edges(:); z(~ismember(z,un_idx))]));
+while ~isempty(free_edges)
+    iter = iter+1;
+    constraints.Length = Inf;%constraints.Length + 0.1;
+    
+    
+    %%
+    points = smooth.Points(free_edges,:);
 
-%%
-t = triangulateNearest(smooth.Points(freeidx,:));
-conn = freeidx(t);
-%%
-smooth = constrain([smooth.ConnectivityList; conn], smooth.Points, constraints);
-
-%%
-free_edges = boundedcheck(smooth, freeidx);
+    %%
+    figure; trisurf(smooth);
+    hold on; scatter3(points(:,1), points(:,2), points(:,3), '*r'); title(num2str(iter));
+    %%
+    
+%     t = triangulateNearest(nec_connections, smooth.Points(freeidx,:));
+    t = triangulateNearest(nec_connections, smooth.Points, freeidx);
+    conn = freeidx(t);
+    %%
+    %     smooth = constrain(unique([smooth.ConnectivityList; conn], 'rows'), smooth.Points, constraints);
+    smooth = triangulation([allcon; conn], smooth.Points);
+    %%
+    free_edges = boundedcheck(smooth);
+    %%
+    allcon = unique(smooth.ConnectivityList, 'rows');
+    un_idx = allcon(:);
+    freepts = z(~ismember(z,un_idx));
+    freeidx = sort([free_edges; freepts]);
+    nec_connections = allcon(any(ismember(allcon,freeidx),2),:);
 end
 %%
 figure; h = trisurf(smooth);
