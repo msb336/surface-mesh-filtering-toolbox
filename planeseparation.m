@@ -42,8 +42,8 @@ while ~isempty(free_edges)
     %%
     
 %     t = triangulateNearest(nec_connections, smooth.Points(freeidx,:));
-    t = triangulateNearest(nec_connections, smooth.Points, freeidx);
-    conn = freeidx(t);
+    conn = triangulateNearest(nec_connections, smooth.Points, freeidx);
+
     %%
     %     smooth = constrain(unique([smooth.ConnectivityList; conn], 'rows'), smooth.Points, constraints);
     smooth = triangulation([allcon; conn], smooth.Points);

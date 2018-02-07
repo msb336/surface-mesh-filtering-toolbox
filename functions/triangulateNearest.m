@@ -10,11 +10,12 @@ function [idx ] = triangulateNearest(nec_con, pointSet, orphans)
 %%%%the entire pointset coming in, and it's slow because your scanning the
 %%%%entier point set for distance when you only need to scan
 %%%%pointset(orphans)
+
 idx = [0 0 0];
 for i = 1:length(orphans)
     index_point = orphans(i);
     if ~any(idx == index_point)
-        idx(index_point,:) = getD(pointSet, [nec_con; idx], index_point);
+        idx(i,:) = getD(pointSet, [nec_con; idx], index_point, orphans);
     end
 end
 idx = idx(idx(:,1)~=0, :);
@@ -24,11 +25,12 @@ end
 
 
 
-function connect = getD(pointset, connections, idx)
-distance = sqrt(sum((pointset-pointset(idx,:)).^2,2));
+function connect = getD(pointset, connections, idx, orphans)
+modded_points = pointset(orphans,:);
+distance = sqrt(sum((modded_points-pointset(idx,:)).^2,2));
 [sorted_d, ind] = sort(distance);
 new_ind = ind(sorted_d~=0);
-closest =[ new_ind(1) new_ind(2)];
+closest = orphans([ new_ind(1) new_ind(2)])';
 crit = [0 0];
 i = 3;
 while ~all(crit)
@@ -36,7 +38,7 @@ while ~all(crit)
         orig = pointset(closest,:) - pointset(idx,:);
         v = orig./(orig(:,1).^2+orig(:,2).^2).^0.5;
         if all(v(1,:) == v(2,:)) || all(-v(1,:) == v(2,:))
-            closest = [new_ind(1) new_ind(i)];
+            closest = orphans([new_ind(1) new_ind(i)])';
             i = i + 1;
         else
             crit(1) =1;
@@ -45,6 +47,7 @@ while ~all(crit)
     points = sort([idx closest]);
     if ismember(points, connections, 'rows')
         crit(1) = 0;
+        closest = orphans([new_ind(1) new_ind(i)])';
         i = i + 1;
     else
         crit(2) = 1;

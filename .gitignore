@@ -3,3 +3,9 @@
 *.asv
 *.stl
 data/segment.stl
+entropy_method.m
+functions/buildAlphaTriangulation.m
+functions/leastSquarePlane.m
+functions/plot_line/license.txt
+functions/plot_line/plot_line.m
+segregatecloud.m
