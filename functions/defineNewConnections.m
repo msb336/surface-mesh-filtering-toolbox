@@ -47,6 +47,7 @@ end
 function newconnection = connect3p(points_connected, con, free_edges, i)
 %find a connection created by three edges (if one exists)
 newconnection = [];
+req = 0;
 for j = 1:length(points_connected)
     second_set = getConnectedPoints(con, points_connected, j);
     second_set = second_set(second_set~=free_edges(i) & ismember(second_set, free_edges));
@@ -57,8 +58,6 @@ for j = 1:length(points_connected)
             newconnection = potcon;
             req = 1;
             break
-        else
-            req = 0;
         end
     end
     if req == 1
@@ -74,7 +73,7 @@ newconnection = [];
 points3d = points(points_connected,:);
 if length(points_connected) == 2
     orig = points3d - points(indexpoint,:);
-    potcon = sort([indexpoint, points_connected']);
+    potcon = sort([indexpoint, points_connected(:)']);
     v = orig./(orig(:,1).^2+orig(:,2).^2 + orig(:,3).^2).^0.5;
     angle = acos(dot(v(1,:), v(2,:)));
     angleparams = angle > 0.16*pi/180 && angle <= pi/2;
