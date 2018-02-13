@@ -21,19 +21,19 @@ modded2 = trans*[vector2'; 1 1];
 unit = modded(1:3,1) - modded(1:3,2)/norm(modded(1:3,1) - modded(1:3,2));
 skewness = abs(modded(1,1)/unit(1) - modded(2,1)/unit(2)) < 0.001;
 
+
 if skewness
     inter = modded(3,1) - unit(3)*skewness(1);
-
     %% Intersection check
     signs = sign(round(modded(1:2,:),5));
     signs = signs(all(signs~=0, 2),:);
     if (inter < max(modded2(3,:)) && inter > 0) && any(signs(:,1)~= signs(:,2))
-    %% Debug
-%     close;
-%     subplot(1,2, 1)
-%     plot3dvectors(modded(1:3,:), modded2(1:3,:));
-%     subplot(1,2,2)
-%     plot3dvectors(vector1, vector2);
+%         %% Debug
+%         close;
+%         subplot(1,2, 1)
+%         plot3dvectors(modded(1:3,:), modded2(1:3,:));
+%         subplot(1,2,2)
+%         plot3dvectors(vector1, vector2);
         intersect = true;
     else
         intersect = false;

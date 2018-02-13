@@ -1,51 +1,41 @@
-function [conn] = nearestTriangulation(pc)
+function [triobj] = nearestTriangulation(pc)
 %NEARESTTRIANGLE determine surface mesh by nearest neighbor
 if isa(pc,'double')
     pc = pointCloud(pc);
 end
-
-conn = uint32([0 0 0]);
-
-for i = 1:length(pc.Location)
-    conn = [conn; getNeighbs(pc, conn, i, 4)];
+conn = [];
+tic
+time = 0;
+maxarea = 0.5;
+newref = 1:pc.Count;
+while ~isempty(newref) && time < 5
+    newcon = sort(pc.findNearestNeighbors(pc.Location(newref(1),:), 3)');
+    newref = newref(2:end);
+    b1 = linecheck(pc.Location(newcon,:));
+    if b1
+        conn = [conn;newcon];
+        newref = newref(~ismember(newref, conn));
+    elseif isempty(newref)
+        break;
+    end
+end
+triobj = triangulation(double(conn), pc.Location);
 end
 
-conn = conn(2:end,:);
-
+function bool = crosscheck(pc, con1, con2, edge)
+p1 = con1(~ismember(con1, edge));
+p2 = con2(~ismember(con2, edge));
+vecs1 = [pc.Location([p1;edge(1)],:);pc.Location([p1;edge(2)],:)];
+vecs2 = [pc.Location([p2;edge(1)],:);pc.Location([p2;edge(2)],:)];
+bool = any(arrayfun(@(x,y)intersection(vecs1(x:x+1,:), vecs2(y:y+1,:)), [1 1 3 3], [1 3 1 3]));
+end
+function bool = linecheck(points)
+l = points(2:3,:)-points(1,:);
+ref = rref(l);
+bool = all(any(ref, 2));
 end
 
-function points = getNeighbs(pc, conn, idx, num)
-%%
-temp = pc.findNearestNeighbors(pc.Location(idx,:), num);
-temp = temp(temp~=idx);
-temp = temp(end-2:end)';
-
-orig = pc.Location(temp,:) - pc.Location(idx,:);
-v = orig./(orig(:,1).^2+orig(:,2).^2 + orig(:,3).^2).^0.5;
-lin = sum([sum(rref(v(:,1:2)),2) sum(rref(v(:,[1 3])),2) sum(rref(v(:,2:3)),2)], 1) == 2;
-
-
-conrows = sort([idx*ones(3,1) [temp(1:2);temp([1 3]);temp([2 3])]], 2);
-conrows = conrows(lin',:);
-
-bool = membercheck(conn, conrows);   
-
-if all(~lin) || all(bool) && num < 10 
-    num = num + 2;
-    neighbs = getNeighbs(pc,conn, idx, num);
-elseif num >= 10
-    neighbs = [];
-else
-    neighbs = conrows(~bool, :);
+function bool = areacheck(points, maxA)
+a = 0.5*norm(cross(points(3,:)-points(1,:), points(2,:)-points(1,:)));
+bool = a <= maxA;
 end
-
-points = neighbs;
-end
-
-function bool = membercheck(v1, v2)
-bool = ismember(v2, v1, 'rows');
-end
-
-
-    
-

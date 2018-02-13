@@ -4,7 +4,7 @@ for i = 1:length(varargin)
     dataset = varargin{i};
     s = size(dataset);
     
-    if s(1) == 3
+    if s(1) == 3 && s(2)~=3
         dataset = dataset';
     elseif s(2) ~= 3
         error('incompatible size')

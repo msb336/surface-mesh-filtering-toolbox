@@ -31,7 +31,7 @@ elseif length(varargin) == 3
     constraints = varargin{3};
 end
 
-maxLength = constraints.Length;
+maxLength = constraints;
 [~,tetrasize] = size(connections);
 
 logi = arrayfun(@(x)checkDistance(connections, points, x, tetrasize, maxLength), 1:length(connections(:,1)));

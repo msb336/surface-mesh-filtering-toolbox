@@ -33,17 +33,13 @@ newconnections = unique(newconnections, 'rows');
 end
 
 
-
-
-
-
-
 %%%%Functions%%%%
 function pointset = getConnectedPoints(connections, currentSet, setindex)
 %Collect all points connected to setindex
 pointset = connections(any(connections == currentSet(setindex),2),:);
 pointset = unique(pointset(pointset~=currentSet(setindex)));
 end
+
 function newconnection = connect3p(points_connected, con, free_edges, i)
 %find a connection created by three edges (if one exists)
 newconnection = [];
@@ -74,12 +70,14 @@ points3d = points(points_connected,:);
 if length(points_connected) == 2
     orig = points3d - points(indexpoint,:);
     potcon = sort([indexpoint, points_connected(:)']);
-    v = orig./(orig(:,1).^2+orig(:,2).^2 + orig(:,3).^2).^0.5;
-    angle = acos(dot(v(1,:), v(2,:)));
-    angleparams = angle > 0.16*pi/180 && angle <= pi/2;
-    if any(v(1,:) ~= v(2,:)) && any(v(1,:) ~= -v(2,:)) && ~ismember(potcon, con, 'rows') && angleparams
-        rel = [points3d; points(indexpoint,:)];
-        newconnection = potcon;
+    if ~ismember(potcon, con, 'rows')
+        v = orig./(orig(:,1).^2+orig(:,2).^2 + orig(:,3).^2).^0.5;
+        angle = acos(dot(v(1,:), v(2,:)));
+        angleparams = angle > 0.16*pi/180 && angle <= pi/2;
+        if any(v(1,:) ~= v(2,:)) && any(v(1,:) ~= -v(2,:)) && angleparams
+            rel = [points3d; points(indexpoint,:)];
+            newconnection = potcon;
+        end
     end
 end
 end
