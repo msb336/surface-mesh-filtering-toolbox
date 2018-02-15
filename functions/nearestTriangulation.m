@@ -29,6 +29,7 @@ vecs1 = [pc.Location([p1;edge(1)],:);pc.Location([p1;edge(2)],:)];
 vecs2 = [pc.Location([p2;edge(1)],:);pc.Location([p2;edge(2)],:)];
 bool = any(arrayfun(@(x,y)intersection(vecs1(x:x+1,:), vecs2(y:y+1,:)), [1 1 3 3], [1 3 1 3]));
 end
+
 function bool = linecheck(points)
 l = points(2:3,:)-points(1,:);
 ref = rref(l);

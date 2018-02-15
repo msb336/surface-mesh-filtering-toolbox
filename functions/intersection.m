@@ -1,4 +1,4 @@
-function [intersect] = intersection(vector1,vector2)
+function [intersect] = intersection(vector1,vector2, ~)
 %INTERSECTION determine if two 3D line segments intersect
 v2 = [vector2(1,:) - vector2(2,:)  1]';
 t1 = [[1 0 0; 0 1 0; 0 0 1; 0 0 0] [-vector2(2,:)'; 1]];
@@ -18,22 +18,38 @@ rot2 = [cos(theta2) 0 sin(theta2) 0; 0 1 0 0; -sin(theta2) 0 cos(theta2) 0; 0 0 
 trans = rot2*rot1*t1;
 modded = trans*[vector1'; 1 1];
 modded2 = trans*[vector2'; 1 1];
-unit = modded(1:3,1) - modded(1:3,2)/norm(modded(1:3,1) - modded(1:3,2));
-skewness = abs(modded(1,1)/unit(1) - modded(2,1)/unit(2)) < 0.001;
+v2trans = trans*[vector2(1,:)';1];
+unit = round((modded(1:3,1) - modded(1:3,2))/norm(modded(1:3,1) - modded(1:3,2)), 5);
+dist2z = round([modded(1,1)/unit(1) modded(2,1)/unit(2)], 5);
+b1 = dist2z(1) == dist2z(2);
+b2 = any(dist2z==0 | isnan(dist2z) | isinf(dist2z));
+skewness = b1 || b2;
+dist2z = dist2z(~isnan(dist2z)&~isinf(dist2z));
+
+    %% Debug
+    if nargin == 3
+        figure;
+        subplot(1,2, 1)
+        plot3dvectors(modded(1:3,:), modded2(1:3,:));
+        view([-104 -26])
+        xlabel('x');ylabel('y');zlabel('z');
+        axis equal
+        subplot(1,2,2)
+        plot3dvectors(vector1, vector2);
+        view([-104 -26])
+        xlabel('x');ylabel('y');zlabel('z');
+        axis equal
+        close;
+    end
 
 
-if skewness
-    inter = modded(3,1) - unit(3)*skewness(1);
+if skewness && ~isempty(dist2z)
+    inter = modded(3,1) - unit(3)*dist2z(1);
     %% Intersection check
     signs = sign(round(modded(1:2,:),5));
     signs = signs(all(signs~=0, 2),:);
-    if (inter < max(modded2(3,:)) && inter > 0) && any(signs(:,1)~= signs(:,2))
-%         %% Debug
-%         close;
-%         subplot(1,2, 1)
-%         plot3dvectors(modded(1:3,:), modded2(1:3,:));
-%         subplot(1,2,2)
-%         plot3dvectors(vector1, vector2);
+    
+    if (abs(inter) < abs(v2trans(3)) && sign(inter) == sign(v2trans(3)) && abs(inter) > 1e-10) && any(signs(:,1)~= signs(:,2))
         intersect = true;
     else
         intersect = false;
