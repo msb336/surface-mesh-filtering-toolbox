@@ -3,8 +3,7 @@ function [ neighbor_vector ] = findNeighbors( conn, idx )
 %     conn - connectivity index
 %     idx - desired index point
 
-[r,~] = find(conn == idx);
-indeces = conn(r,:);
+indeces = conn(conn == idx, :);
 indeces = indeces(:);
 important_ones = indeces(indeces ~= idx);
 neighbor_vector = unique(important_ones);

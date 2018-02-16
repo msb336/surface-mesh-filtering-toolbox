@@ -1,5 +1,6 @@
 function [surfest] = estimateFace(pc, step, threshold)
 %ESTIMATEFACE estimate the surface function of a point cloud, pc
+%   3 inputs: pc (nx3 double), step (scalar), threshold (scalar)
 
 stdev = std(pc);
 [~, I] = sort(stdev);
