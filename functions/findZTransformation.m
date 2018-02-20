@@ -1,7 +1,6 @@
 function [ rot ] = findZTransformation( plane )
 %FINDZTRANSFORMATION determine transformation matrix (non-homogenous) from
 %v1 to z axis
-
 v1 = plane.Normal;
 v1 = [v1(:)/norm(v1); 1];
 

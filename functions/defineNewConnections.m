@@ -19,14 +19,14 @@ newconnections = [];
 for i = 1:length(free_edges)
     points_connected = getConnectedPoints(con, free_edges, i);
     points_connected = points_connected(ismember(points_connected, free_edges));
-    
+    %     plot3dvectors(points(points_connected,:),points(free_edges(i),:), '*');
     switch conlevel
         case 3
             newconnections = [newconnections; connect3p(points_connected, con, free_edges, i)];
         case 2
-            if length(points_connected)>= 2
-                %                 plot3dvectors(points(points_connected,:),'*')
+            if length(points_connected)> 2
                 newest = connect2p(points_connected, con, free_edges(i), points);
+                %                 plot3dvectors(points(newest,:), '*')
                 newconnections = [newconnections; newest];
                 con = [con; newest];
             end
@@ -73,27 +73,20 @@ newconnection = [];
 [i1, i2] = meshgrid(1:length(points_connected)-1, 2:length(points_connected));
 iters = unique(sort([i1(:) i2(:)], 2), 'rows');
 iters = iters(iters(:,1)~=iters(:,2),:);
-a = zeros(size(iters,1));
 for j = 1:size(iters,1)
-    testpoints = points_connected(iters(j,:));
-    testpoints = testpoints(:)';
-    points3d = points(testpoints,:);
+    points3d = points(points_connected(iters(j,:)),:);
     orig = points3d - points(indexpoint,:);
-    potcon = sort([indexpoint, testpoints]);
+    potcon = sort([indexpoint, points_connected(iters(j,:))']);
     if ~ismember(potcon, con, 'rows')
         b1 = linecheck(points(potcon,:));
         b2 = crosscheck(points,con, potcon, indexpoint);
-        temparea = area(points(potcon,:));
-        b3 = areacheck(a);
+        b3 = areacheck(points(potcon,:));
         if b1 && b2 && b3
-            crosscheck(points,con, potcon, indexpoint, 1);
-            a(j) = temparea;
+%             crosscheck(points,con, potcon, indexpoint, 1);
             newconnection = potcon;
+            break
         end
     end
-end
-if any(a~=0)
-    newconnection = sort([indexpoint points_connected(iters(a(min(a~=0))),:)]);
 end
 end
 
@@ -110,7 +103,7 @@ checkpoints = unique(rows(rows~=index));
 
 edges = [checkpoints(:) index*ones(length(checkpoints),1)];
 p1 = pc(edge,:);
-if nargin == 5
+if nargin == 5 && any(pc(con1,3) == -1)
     plot3dvectors(pc(con1,:),'*');
     deb = 1;
 else
@@ -131,13 +124,10 @@ for i = 1:length(checkpoints)
 end
 end
 
-function bool = areacheck(a)
+function bool = areacheck(points)
 maxa = 0.5*0.3^2;
-bool = a <= maxa;
-end
-
-function a = area(points)
 a = 0.5*norm(cross(points(3,:)-points(1,:), points(2,:)-points(1,:)));
+bool = a <= maxa;
 end
 
 

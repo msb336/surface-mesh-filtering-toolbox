@@ -1,7 +1,7 @@
 function [smooth] = constrainedTriangulation(p)
     tri = delaunayTriangulation(p);
     %% Apply Constraints
-    conTri = constrain(tri, 0.5);
+    conTri = constrain(tri, Inf);
 
     %% Isotropic Laplacian Smoothing
     smooth =conTri;% isoLaplace(conTri);

@@ -3,21 +3,16 @@ function [triobj] = nearestTriangulation(pc)
 if isa(pc,'double')
     pc = pointCloud(pc);
 end
-% conn = [];
-conn = sort(pc.findNearestNeighbors(pc.Location(1,:), 3)');
+conn = [];
 tic
 time = 0;
 maxarea = 0.5;
 newref = 1:pc.Count;
-
-while ~isempty(newref) && time < 15
-    %newcon = sort(pc.findNearestNeighbors(pc.Location(newref(1),:), 3)');
-    closest = pc.findNearestNeighbors(pc.Location(conn(end),:), 3)';
-
-%     newref = newref(2:end);
+while ~isempty(newref) && time < 5
+    newcon = sort(pc.findNearestNeighbors(pc.Location(newref(1),:), 3)');
+    newref = newref(2:end);
     b1 = linecheck(pc.Location(newcon,:));
-    b2 = areacheck(pc.Location(newcon,:), 0.06, 0.03);
-    if b1 && b2
+    if b1
         conn = [conn;newcon];
         newref = newref(~ismember(newref, conn));
     elseif isempty(newref)
@@ -41,7 +36,7 @@ ref = rref(l);
 bool = all(any(ref, 2));
 end
 
-function bool = areacheck(points, maxA, minA)
+function bool = areacheck(points, maxA)
 a = 0.5*norm(cross(points(3,:)-points(1,:), points(2,:)-points(1,:)));
-bool = a <= maxA && a>= minA;
+bool = a <= maxA;
 end
