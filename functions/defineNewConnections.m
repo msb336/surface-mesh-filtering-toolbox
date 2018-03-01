@@ -32,7 +32,6 @@ for i = 1:length(free_edges)
             end
     end
 end
-
 newconnections = unique(newconnections, 'rows');
 end
 
@@ -77,11 +76,13 @@ for j = 1:size(iters,1)
     points3d = points(points_connected(iters(j,:)),:);
     orig = points3d - points(indexpoint,:);
     potcon = sort([indexpoint, points_connected(iters(j,:))']);
-    if ~ismember(potcon, con, 'rows')
+    if ~ismember(potcon, con, 'rows') 
+%         plot3dvectors(points(potcon,:), '*')
         b1 = linecheck(points(potcon,:));
         b2 = crosscheck(points,con, potcon, indexpoint);
         b3 = areacheck(points(potcon,:));
-        if b1 && b2 && b3
+        b4 = anglecheck(points(potcon,:));
+        if b1 && b2 && b3 && b4
 %             crosscheck(points,con, potcon, indexpoint, 1);
             newconnection = potcon;
             break
@@ -125,9 +126,20 @@ end
 end
 
 function bool = areacheck(points)
-maxa = 0.5*0.3^2;
+maxa = 0.5^3;
 a = 0.5*norm(cross(points(3,:)-points(1,:), points(2,:)-points(1,:)));
 bool = a <= maxa;
+end
+
+function bool = anglecheck(points)
+minangle = 50*pi/180;
+maxangle = 90*pi/180 + minangle;
+vecs = [points(1, :)' - points(2, :)', ...
+            points(3, :)' - points(2, :)', ...
+            points(3, :)' - points(1, :)'];
+        angles = [acos(dot(vecs(:,1), vecs(:,2))/(norm(vecs(:,1))*norm(vecs(:,2)))); ...
+                   acos(dot(vecs(:,1), vecs(:,3))/(norm(vecs(:,1))*norm(vecs(:,3))))];
+bool = ~any(abs(angles)> maxangle | abs(angles) < minangle);
 end
 
 

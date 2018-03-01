@@ -4,6 +4,8 @@ function [hol] = buildshape(shape,definition, noise_level)
 shape = lower(shape);
 if nargin > 1
     d = -1:definition:1;
+else
+    noise_level = 0;
 end
 
 switch shape
@@ -24,7 +26,8 @@ switch shape
         p = unique([x(:), y(:), z(:)],'rows');
         hol = p;
     case 'read'
-        hol = csvread('bridge.csv');
+        laspoint = lasdata('filtered_17894_1519.las');
+        hol =[laspoint.x laspoint.y laspoint.z];
         noise_level = 0;
 end
 
