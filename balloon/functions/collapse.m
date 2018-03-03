@@ -20,41 +20,26 @@ it = 1;
 
 
 tic
-while toc < timeout && length(newpointset) > 30
-    
-    if it > 1/stepsize
-        stepsize = -stepsize;
-        thresh = thresh+0.1*thresh;
-        it = 0;
-    end
-    
-    [newpointset, balloonpoints, used_index]  = pair(newpointset, balloonpoints, used_index, thresh);
+while length(used_index) < 0.99*l && it*stepsize < 1
+    [~, balloonpoints, used_index]  = pair(newpointset, balloonpoints, used_index, thresh);
     idx = ~ismember(1:l, used_index);
     balloonpoints(idx, :) = (centroid - balloonpoints(idx, :))*stepsize + balloonpoints(idx, :);
 %     plot3dvectors(balloonpoints(idx, :), '.')
 %     plot3dvectors(pointset, '.')
 %     plot3dvectors(balloonpoints(~idx,:), '*');
 %     
-%     view([-90,0])
-%   
+%     view([-101,70])
+%     axis equal
 %     hold off
 %     plot3(0,0,0)
-it = it + 1;
+it = it+1;
 end
 
-collapsedmesh = triangulation(balloon.ConnectivityList, balloonpoints);
+% [connectivity] = clean_up(balloon.ConnectivityList,balloonpoints);
+connectivity = balloon.ConnectivityList;
+collapsedmesh = triangulation(connectivity, balloonpoints);
 
 end
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -73,11 +58,14 @@ moddedballoon(new_point_locks,:) = referencepoints(pairidx(pairidx~=0),:);
 newref = referencepoints;
 newref(pairidx(pairidx~=0),:) = [];
 
+
+
+
     function index = neighborhunt(i)
         if ~ismember(i, used_index)
             p = balloonpoints(i,:);
             neigh = ptCloud.findNearestNeighbors(p, 1);
-                if norm(ptCloud.Location(neigh,:) -p) <= threshold && ~any(neigh == used_index)
+                if norm(ptCloud.Location(neigh,:) -p) <= threshold %&& ~any(neigh == used_index)
                     index = neigh;
                 else
                     index = uint32(0);
@@ -86,5 +74,18 @@ newref(pairidx(pairidx~=0),:) = [];
             index = uint32(0);
         end
     end
+
+end
+
+
+function [newcon] = clean_up(con, pts)
+[~, dup2unique, ~] = unique(pts, 'rows');
+
+for i = 1:length(dup2unique)
+    duplicates = all(pts == pts(dup2unique(i),:), 2);
+    con(ismember(con, find(duplicates))) = dup2unique(i);
+end
+
+newcon = con;
 
 end
